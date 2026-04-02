@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>One More SaaS - Playbook Cockpit</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login{text-align:center;max-width:400px;width:90%}
+.login h1{font-size:1.6rem;margin-bottom:.5rem;color:#38bdf8}
+.login p{color:#94a3b8;margin-bottom:1.5rem;font-size:.9rem}
+.login input{width:100%;padding:.75rem 1rem;background:#1e293b;border:1px solid #334155;border-radius:.5rem;color:#e2e8f0;font-size:1rem;margin-bottom:.75rem;outline:none}
+.login input:focus{border-color:#38bdf8}
+.login button{width:100%;padding:.75rem;background:#0ea5e9;border:none;border-radius:.5rem;color:#fff;font-size:1rem;cursor:pointer;font-weight:600}
+.login button:hover{background:#0284c7}
+.error{color:#f87171;font-size:.85rem;margin-top:.5rem;display:none}
+.menu{text-align:center;max-width:500px;width:90%}
+.menu h1{font-size:1.6rem;margin-bottom:1.5rem;color:#38bdf8}
+.menu a{display:block;padding:1rem;background:#1e293b;border:1px solid #334155;border-radius:.5rem;color:#e2e8f0;text-decoration:none;font-size:1.05rem;margin-bottom:.6rem;transition:all .2s}
+.menu a:hover{background:#334155;border-color:#38bdf8;color:#38bdf8}
+.logout{margin-top:1.5rem;color:#64748b;font-size:.85rem;cursor:pointer;text-decoration:underline}
+.logout:hover{color:#94a3b8}
+#loading{display:none;text-align:center;padding:2rem;color:#94a3b8}
+.spinner{border:3px solid #1e293b;border-top:3px solid #38bdf8;border-radius:50%;width:32px;height:32px;animation:spin 1s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+<h1>Playbook Cockpit</h1>
+<p>One More SaaS</p>
+<input type="password" id="pw" placeholder="Passwort eingeben..." autofocus>
+<button onclick="checkPw()">Zugang</button>
+<div id="err" class="error">Falsches Passwort</div>
+</div>
+<div id="menu" class="menu" style="display:none">
+<h1>Playbook Cockpit</h1>
+<a href="?p=marketing">Marketing Prozess</a>
+<a href="?p=sales">Sales Prozess</a>
+<a href="?p=onboarding">Onboarding Prozess</a>
+<a href="?p=fulfillment">Fulfillment Prozess</a>
+<a href="?p=team-ops">Team Operations</a>
+<div class="logout" onclick="logout()">Abmelden</div>
+</div>
+<div id="loading"><div class="spinner"></div>Lade Playbook...</div>
+<script>
+const H='bc39dd530b3a762d086a0031394753e6d75a13efaecd2b32fb20d1eb67942588';
+const API='https://ywqhpxheoutoufhfizzt.supabase.co/functions/v1/serve-playbook';
+async function sha256(m){const b=new TextEncoder().encode(m);const h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function checkPw(){const p=document.getElementById('pw').value;const h=await sha256(p);if(h===H){sessionStorage.setItem('ok','1');init()}else{document.getElementById('err').style.display='block'}}
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')checkPw()});
+function logout(){sessionStorage.removeItem('ok');location.href=location.pathname}
+async function init(){
+const ok=sessionStorage.getItem('ok');
+if(!ok){document.getElementById('login').style.display='';return}
+document.getElementById('login').style.display='none';
+const u=new URLSearchParams(location.search);
+const p=u.get('p');
+if(!p){document.getElementById('menu').style.display='';return}
+document.getElementById('loading').style.display='block';
+try{const r=await fetch(API+'?p='+p);const t=await r.text();document.open();document.write(t);document.close()}
+catch(e){document.body.innerHTML='<div style="text-align:center;padding:2rem;color:#f87171">Fehler beim Laden: '+e.message+'</div>'}
+}
+init();
+</script>
+</body>
+</html>
